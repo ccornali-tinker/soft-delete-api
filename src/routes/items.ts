@@ -42,25 +42,21 @@ itemsRouter.post("/", async (req: Request, res: Response) => {
   } catch (e: unknown) {
     const err = e as { code?: string };
     if (err.code === "23505") {
-      res.status(409).json({ error: "An active item with this name already exists" });
+      res.status(409).json({ error: "Duplicate error" });
       return;
     }
     throw e;
   }
 });
 
-// BUG: hard-deletes the row — should soft-delete (set deleted_at).
+// BUG: hard-deletes the row — should soft-delete.
 itemsRouter.delete("/:id", async (req: Request, res: Response) => {
   const id = req.params.id;
   const { rowCount } = await pool.query(`DELETE FROM items WHERE id = $1`, [id]);
-  if (!rowCount) {
-    res.status(404).json({ error: "Not found" });
-    return;
-  }
   res.status(204).send();
 });
 
-// MISSING: implement restore (clear deleted_at), handle uniqueness conflicts.
+// MISSING: implement restore.
 itemsRouter.post("/:id/restore", async (_req: Request, res: Response) => {
   res.status(501).json({ error: "Not implemented" });
 });

@@ -2,7 +2,11 @@
 
 Backend interview exercise (**~30 minutes**): **TypeScript**, **Express**, **PostgreSQL**. The API compiles and runs, but several behaviors are **intentionally wrong or missing**—your job is to fix them.
 
+> **Most changes belong in `src/routes/items.ts`.** You may add a small helper module if it keeps the code clear.
+
 ## Setup
+
+Prerequisites: **Docker Compose v2** (`docker compose`, not `docker-compose`). A `.nvmrc` is provided — if you use `nvm` or `fnm`, run `nvm use` / `fnm use` before installing.
 
 1. Start Postgres (from repo root):
 
@@ -31,34 +35,33 @@ Backend interview exercise (**~30 minutes**): **TypeScript**, **Express**, **Pos
 
 ## Take note
 
-1. Styling and UI do not apply here—focus on HTTP behavior and SQL.
-2. You **may** use documentation or search; if your process is observed, **talk through** what you are looking up and why.
-3. This is **not** strictly pass/fail. We care about your **thought process**, **communication**, and **how you validate** your solution—not only the final diff.
+- You ARE allowed to use google or other resources to look things up, just make sure you share your screen for that and talk through the process. AI tools are not allowed.
+- This is not a PASS/FAIL coding challenge, and you don't automatically fail if you miss something or one of the points. We are reviewing your overall **thought process**, **communication**, and the way you determine a solution just as much are we are reviewing the final product.
+
 
 ## Requirements
 
-1. **`DELETE /items/:id` should soft-delete**  
-   Set `deleted_at` (e.g. `now()`). The row must **remain** in the table. Return **204** when an item was updated, **404** when no row exists for that id.
+1. **`DELETE /items/:id` should not destroy data**
+   Deleting an item should make it disappear from normal use, but the record must be recoverable. Return an appropriate status code whether or not the item exists.
 
-2. **`GET /items` should list only active items**  
-   By default, **exclude** rows where `deleted_at` is set. Preserve sort order: **oldest first** (`created_at ASC`, tie-break by `id` if you like).
+2. **`GET /items` should reflect active items only**
+   The list should not include items that have been deleted. Preserve the existing sort order and response shape.
 
-3. **`POST /items/:id/restore` should restore**  
-   Clear `deleted_at` for that id. Return **200** with the item JSON when it becomes active again, **404** if the id does not exist, **409** if restoring would violate the **unique active name** rule (see schema).
+3. **`POST /items/:id/restore` should make a deleted item active again**
+   Return the restored item on success, or an appropriate error if the item cannot be found or cannot be restored. Check the schema—there may be constraints worth considering.
 
-4. **Timestamps**  
-   New items already get `created_at` from the database default. Ensure list/create responses still expose `createdAt` in ISO 8601 (existing JSON shape).
+State any assumptions you make about HTTP status codes or edge cases (e.g. delete twice, restore while a name collision exists). If something is ambiguous, pick a reasonable default and note it.
 
 ## Stretch (only if you finish early)
 
-- **`GET /items?includeDeleted=true`**: return **all** rows (deleted and active), still sorted by `created_at ASC`.
+- **`GET /items?includeDeleted=true`**: return all rows regardless of status, in the same sort order. Think about what the response shape should look like for deleted items.
 
 ## Reference
 
 | Method | Path | Notes |
 |--------|------|--------|
 | GET | `/health` | Liveness |
-| GET | `/items` | List (fix default filter) |
+| GET | `/items` | List active items |
 | POST | `/items` | Body: `{ "name": "..." }` — already creates active items |
 | DELETE | `/items/:id` | Should soft-delete |
 | POST | `/items/:id/restore` | Should restore or 409 on name conflict |
@@ -67,5 +70,3 @@ Backend interview exercise (**~30 minutes**): **TypeScript**, **Express**, **Pos
 
 - Partial unique index: at most **one active row per `name`** (`deleted_at IS NULL`).
 - Duplicate names are allowed **among deleted** rows.
-
-Most changes belong in `src/routes/items.ts`. You may add a small helper module if it keeps the code clear.
