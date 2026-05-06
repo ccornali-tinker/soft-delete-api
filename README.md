@@ -67,6 +67,4 @@ State any assumptions you make about HTTP status codes or edge cases (e.g. delet
 | POST | `/items/:id/restore` | Should restore or 409 on name conflict |
 
 ## Schema reminder
-
-- Partial unique index: at most **one active row per `name`** (`deleted_at IS NULL`).
 - Duplicate names are allowed **among deleted** rows.
