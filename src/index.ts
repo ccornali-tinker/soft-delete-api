@@ -1,7 +1,9 @@
 import "dotenv/config";
 import express from "express";
+import swaggerUi from "swagger-ui-express";
 import { pool } from "./db.js";
 import { itemsRouter } from "./routes/items.js";
+import { spec } from "./openapi.js";
 
 const app = express();
 app.use(express.json());
@@ -11,6 +13,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/items", itemsRouter);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(spec));
 
 const port = Number(process.env.PORT) || 3000;
 
